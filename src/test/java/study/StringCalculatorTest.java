@@ -2,6 +2,7 @@ package study;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.ValueSource;
@@ -10,104 +11,77 @@ import org.junit.jupiter.params.provider.ValueSource;
 import java.io.ByteArrayInputStream;
 import java.util.Scanner;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.*;
 
 public class StringCalculatorTest {
 
+    StringCalculator stringCalculator;
+
     @BeforeEach
     void setUp() {
+        stringCalculator = new StringCalculator();
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {"2 + 3 * 4 / 2"})
-    void convertToMathematicalExpression(String expression) throws Exception {
-        String[] values = expression.split(" ");
-        int valuesLength = values.length;
-        int numberCount = (valuesLength + 1) / 2;
-        int symbolCount = (valuesLength - 1) / 2;
-
-        int[] numbers = new int[numberCount];
-        for(int index = 0; index < numberCount; index++){
-            numbers[index] = Integer.parseInt(values[index * 2]);
-        }
-
-        String[] symbols = new String[symbolCount];
-        for(int index = 0; index < symbolCount; index++){
-            symbols[index] = values[(index * 2) + 1];
-        }
-
-        int result = numbers[0];
-        for(int index = 0; index < symbolCount; index++){
-            System.out.println(index);
-            System.out.println(symbols[index]);
-            switch(symbols[index]){
-                case "+":
-                    result = result + numbers[index + 1];
-                    break;
-                case "-":
-                    result = result - numbers[index + 1];
-                    break;
-                case "*":
-                    result = result * numbers[index + 1];
-                    break;
-                case "/":
-                    result = result / numbers[index + 1];
-                    break;
-                default:
-                    throw new Exception("unavailable symbol");
-            }
-        }
-        assertThat(result).isEqualTo(10);
+    @ValueSource(strings = {"2 + 3 * 4 / 2 - 5"})
+    void calculate(String expression) throws Exception {
+        int actual = stringCalculator.calculate(expression);
+        assertThat(actual).isEqualTo(5);
     }
 
-    @ParameterizedTest
-    @CsvSource(value = {"2 + 3 * 4 / 2, true", "2 + 3 * 4 /, false"})
+    @Test()
     @DisplayName("수식 유효성 검사")
-    void isExpressionAvailable(String expression, boolean availableYn){
-        String[] values = expression.split(" ");
-        assertThat(values.length % 2 == 1).isEqualTo(availableYn);
+    void isExpressionAvailable() throws Exception {
+        //given
+        String expression1 = "2 + 3 * 4 / 2";
+        String expression2 = "2 + 3 * 4 /";
+        String[] values1 = expression1.split(" ");
+        String[] values2 = expression2.split(" ");
+
+        stringCalculator.validateExpression(values1);
+        assertThatThrownBy(() -> stringCalculator.validateExpression(values2))
+                .isInstanceOf(Exception.class)
+                .hasMessage("unavailable Expression");
     }
 
     @ParameterizedTest
     @CsvSource(value = {"1,1,2", "2,3,5"})
     @DisplayName("덧셈")
     void sum(int numberFirst, int numberSecond, int result){
-        assertThat(numberFirst + numberSecond).isEqualTo(result);
+        int actual = stringCalculator.sum(numberFirst, numberSecond);
+        assertThat(actual).isEqualTo(result);
     }
 
     @ParameterizedTest
     @CsvSource(value = {"2,1,1", "2,3,-1"})
     @DisplayName("뺄셈")
     void difference(int numberFirst, int numberSecond, int result){
-        assertThat(numberFirst - numberSecond).isEqualTo(result);
+        int actual = stringCalculator.difference(numberFirst, numberSecond);
+        assertThat(actual).isEqualTo(result);
     }
 
     @ParameterizedTest
     @CsvSource(value = {"1,1,1", "2,3,6"})
     @DisplayName("곱셈")
     void product(int numberFirst, int numberSecond, int result){
-        assertThat(numberFirst * numberSecond).isEqualTo(result);
+        int actual = stringCalculator.product(numberFirst, numberSecond);
+        assertThat(actual).isEqualTo(result);
     }
 
     @ParameterizedTest
     @CsvSource(value = {"1,1,1", "0,3,0"})
     @DisplayName("나눗셈")
     void quotient(int numberFirst, int numberSecond, int result){
-        assertThat(numberFirst / numberSecond).isEqualTo(result);
+        int actual = stringCalculator.quotient(numberFirst, numberSecond);
+        assertThat(actual).isEqualTo(result);
     }
     @ParameterizedTest
     @ValueSource(strings = {"2 + 3 * 4 / 2"})
     @DisplayName("문자열에서 숫자만 추출하기")
     void convertToNumbers(String expression){
         String[] values = expression.split(" ");
-        int valuesLength = values.length;
-        int numberCount = (valuesLength + 1) / 2;
-        int[] numbers = new int[numberCount];
-
-        for(int index = 0; index < numberCount; index++){
-            numbers[index] = Integer.parseInt(values[index * 2]);
-        }
-        assertThat(numbers).containsExactly(2, 3, 4, 2);
+        int[] actual = stringCalculator.convertToNumbers(values);
+        assertThat(actual).containsExactly(2, 3, 4, 2);
     }
 
     @ParameterizedTest
@@ -115,13 +89,8 @@ public class StringCalculatorTest {
     @DisplayName("문자열에서 기호만 추출하기")
     void convertToSymbols(String expression){
         String[] values = expression.split(" ");
-        int valuesLength = values.length;
-        int symbolCount = (valuesLength - 1) / 2;
-        String[] symbols = new String[symbolCount];
-        for(int index = 0; index < symbolCount; index++){
-            symbols[index] = values[(index * 2) + 1];
-        }
-        assertThat(symbols).containsExactly("+", "*", "/");
+        String[] actual = stringCalculator.convertToSymbols(values);
+        assertThat(actual).containsExactly("+", "*", "/");
     }
 
     @ParameterizedTest

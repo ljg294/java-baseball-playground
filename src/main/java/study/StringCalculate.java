@@ -2,7 +2,7 @@ package study;
 
 import java.util.Scanner;
 
-public class main {
+public class StringCalculate {
     public static void main(String[] args) throws Exception {
         Scanner scanner = new Scanner(System.in);
         StringCalculator stringCalculator = new StringCalculator();
